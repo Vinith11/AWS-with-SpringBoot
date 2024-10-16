@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S3 CRUD Operations</title>
+</head>
+<body>
+<h1>S3 CRUD Operations</h1>
+
+<h2>Upload File</h2>
+<form id="uploadForm">
+    <input type="file" id="fileInput" required>
+    <button type="submit">Upload</button>
+</form>
+
+<h2>File List</h2>
+<ul id="fileList"></ul>
+
+<script>
+    const apiUrl = '/api/s3';
+
+    // Upload file
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('file', document.getElementById('fileInput').files[0]);
+
+        try {
+            const response = await fetch(`${apiUrl}/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            alert(await response.text());
+            loadFileList();
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+
+    // Load file list
+    async function loadFileList() {
+        try {
+            const response = await fetch(`${apiUrl}/list`);
+            const files = await response.json();
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            files.forEach(file => {
+                const li = document.createElement('li');
+                li.textContent = file;
+
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download';
+                downloadBtn.onclick = () => window.open(`${apiUrl}/download/${file}`);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.onclick = () => deleteFile(file);
+
+                li.appendChild(downloadBtn);
+                li.appendChild(deleteBtn);
+                fileList.appendChild(li);
+            });
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    // Delete file
+    async function deleteFile(fileName) {
+        try {
+            const response = await fetch(`${apiUrl}/delete/${fileName}`, {
+                method: 'DELETE'
+            });
+            alert(await response.text());
+            loadFileList();
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    // Load file list on page load
+    loadFileList();
+</script>
+</body>
+</html>
